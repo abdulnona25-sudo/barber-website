@@ -1,0 +1,14 @@
+# Mac system files
+.DS_Store
+
+# Node modules (if you use backend later)
+node_modules/
+
+# Logs
+*.log
+
+# Environment files (important later)
+.env
+
+# VS Code settings (optional)
+.vscode/
