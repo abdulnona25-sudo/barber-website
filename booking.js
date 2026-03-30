@@ -68,8 +68,10 @@ function BookingForm() {
                     setShowPopup(false);
                     return;
                 }
+                setShowPopup(false);
+                setShowSuccess(true);
+                setErrorMessage("");
 
-                alert("SUCCESS ✅");
 
             } catch (error) {
                 console.error("ERROR:", error);
