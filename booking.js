@@ -11,7 +11,9 @@ function BookingForm() {
     const [showSuccess, setShowSuccess] = useState(false);
     const [phoneError, setPhoneError] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
+    const [loading, setLoading] = useState(false);
 
+    // 👉 HANDLE INPUT CHANGE
     function handleChange(e) {
         setFormData({
             ...formData,
@@ -25,11 +27,13 @@ function BookingForm() {
         setErrorMessage("");
     }
 
+    // 👉 VALIDATE UK PHONE
     function validateUKPhone(phone) {
         const ukPhoneRegex = /^(?:0|\+44)\d{9,10}$/;
         return ukPhoneRegex.test(phone.replace(/\s+/g, ""));
     }
 
+    // 👉 FORM SUBMIT
     function handleSubmit(e) {
         e.preventDefault();
 
@@ -46,39 +50,48 @@ function BookingForm() {
         setShowPopup(true);
     }
 
-        async function confirmBooking() {
-            console.log("CLICKED");
+    // 👉 CONFIRM BOOKING (FIXED)
+    async function confirmBooking() {
+        console.log("CLICKED");
 
-            try {
-                const response = await fetch("https://barber-website-d8re.onrender.com/book", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(formData)
-                });
+        setLoading(true);
 
-                console.log("Response:", response);
+        try {
+            const response = await fetch("https://barber-website-d8re.onrender.com/book", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(formData)
+            });
 
-                const data = await response.json();
-                console.log("Data:", data);
+            console.log("Response:", response);
 
-                if (!response.ok) {
-                    setErrorMessage(data.message);
-                    setShowPopup(false);
-                    return;
-                }
+            const data = await response.json();
+            console.log("Data:", data);
+
+            if (!response.ok) {
+                setErrorMessage(data.message || "Booking failed");
                 setShowPopup(false);
-                setShowSuccess(true);
-                setErrorMessage("");
-
-
-            } catch (error) {
-                console.error("ERROR:", error);
-                alert("Server not working");
+                setLoading(false);
+                return;
             }
+
+            // ✅ SUCCESS
+            setShowPopup(false);
+            setShowSuccess(true);
+            setErrorMessage("");
+            setFormData({ name: "", phone: "", time: "" });
+
+        } catch (error) {
+            console.error("ERROR:", error);
+            setErrorMessage("Server error. Try again.");
         }
 
+        setLoading(false);
+    }
+
+    // 👉 CANCEL
     function cancelBooking() {
         setShowPopup(false);
     }
@@ -86,6 +99,7 @@ function BookingForm() {
     return (
         <div className="bookingPage grid md:grid-cols-3 gap-10 px-10">
 
+            {/* LEFT */}
             <div className="bookingHours">
                 <h3>Opening Hours</h3>
                 <p>Saturday: 9 am – 6 pm</p>
@@ -97,10 +111,11 @@ function BookingForm() {
                 <p>Friday: 9 am – 6:30 pm</p>
             </div>
 
+            {/* CENTER */}
             <div className="bookingCenter">
                 <h1>Book Appointment</h1>
 
-                {/* ERROR MESSAGE */}
+                {/* ERROR */}
                 {errorMessage && (
                     <div style={{
                         background: "#ff4d4d",
@@ -162,6 +177,7 @@ function BookingForm() {
                 </form>
             </div>
 
+            {/* RIGHT */}
             <div className="paymentInfo">
                 <h3>Payment Methods</h3>
                 <p>• Cash</p>
@@ -179,11 +195,19 @@ function BookingForm() {
                         <p><b>Time:</b> {formData.time}</p>
 
                         <div className="popupButtons">
-                            <button className="btnBook" onClick={confirmBooking}>
-                                Confirm
+                            <button
+                                type="button"
+                                className="btnBook"
+                                onClick={confirmBooking}
+                                disabled={loading}
+                            >
+                                {loading ? "Booking..." : "Confirm"}
                             </button>
 
-                            <button className="btnCancel" onClick={cancelBooking}>
+                            <button
+                                className="btnCancel"
+                                onClick={cancelBooking}
+                            >
                                 Cancel
                             </button>
                         </div>
@@ -215,5 +239,6 @@ function BookingForm() {
     );
 }
 
+// RENDER
 const root = ReactDOM.createRoot(document.getElementById("booking-root"));
 root.render(<BookingForm />);
