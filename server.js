@@ -1,45 +1,38 @@
 const express = require('express');
-const app = express();
+const cors = require('cors');
+const nodemailer = require('nodemailer');
 
+const app = express();
 const PORT = 3000;
 
 // middleware
+app.use(cors({
+    origin: "*"
+}));
 app.use(express.json());
 
-// fake database
+// fake database (for now)
 let bookings = [];
 
-// shop hours
-const OPEN_HOUR = 8;   // 08:00
-const CLOSE_HOUR = 18; // 18:00 (6PM)
+// ✅ EMAIL SETUP (GMAIL)
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'abdulnona25@gmail.com', // your gmail
+        pass: 'puzv kgna sbpq legh'     // 16 digit app password
+    }
+});
 
 // test route
 app.get('/', (req, res) => {
-    res.send('Barber shop backend is running');
+    res.send('Server running');
 });
 
 // 👉 CREATE BOOKING
-app.post('/book', (req, res) => {
-    const { name, time } = req.body;
+app.post('/book', async (req, res) => {
+    const { name, phone, time } = req.body;
 
-    // ❌ Check if fields exist
-    if (!name || !time) {
-        return res.status(400).json({
-            message: 'Name and time are required'
-        });
-    }
-
-    // ❌ Convert time (example: "14:30" → 14)
-    const hour = parseInt(time.split(':')[0]);
-
-    // ❌ Check if within working hours
-    if (hour < OPEN_HOUR || hour >= CLOSE_HOUR) {
-        return res.status(400).json({
-            message: 'Booking must be between 08:00 and 18:00'
-        });
-    }
-
-    // ❌ Check if time already booked
+    // ❌ check if time already booked
     const exists = bookings.find(b => b.time === time);
 
     if (exists) {
@@ -48,21 +41,49 @@ app.post('/book', (req, res) => {
         });
     }
 
+    // ❌ check working hours
+    if (time < "09:00" || time > "18:30") {
+        return res.status(400).json({
+            message: 'Outside working hours'
+        });
+    }
+
     const newBooking = {
         id: bookings.length + 1,
         name,
+        phone,
         time
     };
 
     bookings.push(newBooking);
 
+    // ✅ SEND EMAIL TO BARBER
+    try {
+        await transporter.sendMail({
+            from: 'abdulnona25@gmail.com',
+            to: 'abdulnona25@gmail.com', // barber email (can be same)
+            subject: 'New Booking Request',
+            text: `
+New booking:
+
+Name: ${name}
+Phone: ${phone}
+Time: ${time}
+
+Call or text the customer to confirm.
+            `
+        });
+    } catch (err) {
+        console.log("Email error:", err);
+    }
+
     res.json({
-        message: 'Booking request sent (barber will confirm)',
+        message: 'Booking request sent',
         booking: newBooking
     });
 });
 
-// 👉 GET ALL BOOKINGS
+// 👉 GET BOOKINGS
 app.get('/bookings', (req, res) => {
     res.json(bookings);
 });

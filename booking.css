@@ -135,8 +135,13 @@ body{
 
 .popupButtons{
     display: flex;
-    justify-content: space-around;
+    justify-content: center;
+    gap: 15px; 
     margin-top: 20px;
+}
+
+.popupButtons button{
+    min-width: 140px;
 }
 
 .btnCancel{
