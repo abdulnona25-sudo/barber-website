@@ -46,33 +46,36 @@ function BookingForm() {
         setShowPopup(true);
     }
 
-    async function confirmBooking() {
-        try {
-            const response = await fetch("https://barber-website-d8re.onrender.com/book", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(formData)
-            });
+        async function confirmBooking() {
+            console.log("CLICKED");
 
-            const data = await response.json();
+            try {
+                const response = await fetch("https://barber-website-d8re.onrender.com/book", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(formData)
+                });
 
-            if (!response.ok) {
-                setErrorMessage(data.message);
-                setShowPopup(false);
-                return;
+                console.log("Response:", response);
+
+                const data = await response.json();
+                console.log("Data:", data);
+
+                if (!response.ok) {
+                    setErrorMessage(data.message);
+                    setShowPopup(false);
+                    return;
+                }
+
+                alert("SUCCESS ✅");
+
+            } catch (error) {
+                console.error("ERROR:", error);
+                alert("Server not working");
             }
-
-            setShowPopup(false);
-            setShowSuccess(true);
-            setErrorMessage("");
-
-        } catch (error) {
-            setErrorMessage("Server not working. Make sure backend is running.");
-            setShowPopup(false);
         }
-    }
 
     function cancelBooking() {
         setShowPopup(false);

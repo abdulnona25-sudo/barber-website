@@ -32,14 +32,6 @@ app.get('/', (req, res) => {
 app.post('/book', async (req, res) => {
     const { name, phone, time } = req.body;
 
-    // ❌ check if time already booked
-    const exists = bookings.find(b => b.time === time);
-
-    if (exists) {
-        return res.status(400).json({
-            message: 'This time is already booked'
-        });
-    }
 
     // ❌ check working hours
     if (time < "09:00" || time > "18:30") {
