@@ -382,6 +382,9 @@ function BookingForm() {
     const [phoneError, setPhoneError] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
     const [loading, setLoading] = useState(false);
+    const [lastBooking, setLastBooking] = useState(null);
+    const SHOP_PHONE = "+447737055883";
+    const SHOP_WA = "447737055883";
 
     function handleChange(e) {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -410,6 +413,7 @@ function BookingForm() {
             });
             const data = await response.json();
             if (!response.ok) { setErrorMessage(data.message || "Booking failed"); setShowPopup(false); setLoading(false); return; }
+            setLastBooking(formData);
             setShowPopup(false);
             setShowSuccess(true);
             setErrorMessage("");
@@ -449,7 +453,7 @@ function BookingForm() {
             {/* CENTER - Form */}
             <div className="form-panel">
                 <h2>Reserve Your Appointment</h2>
-                <p className="form-subtitle">We'll confirm via phone or text</p>
+                <p className="form-subtitle">Book online, then call or WhatsApp us to confirm</p>
 
                 {errorMessage && <div className="error-msg">{errorMessage}</div>}
 
@@ -524,10 +528,19 @@ function BookingForm() {
                     <div className="popup-box">
                         <div className="success-icon">✅</div>
                         <h3>Booking Sent</h3>
-                        <p style={{color: 'var(--text-muted)', fontSize: '15px', margin: '12px 0 28px'}}>
-                            Your barber will contact you by phone or text to confirm.
+                        <p style={{color: 'var(--text-muted)', fontSize: '15px', margin: '12px 0 20px'}}>
+                            To confirm your slot, please call or WhatsApp us.
                         </p>
-                        <button className="btn-confirm" onClick={() => { setShowSuccess(false); setFormData({ name: "", phone: "", time: "" }); }}>
+                        <div className="popup-btns" style={{marginBottom: '12px'}}>
+                            <a className="btn-confirm" style={{textAlign: 'center', textDecoration: 'none'}} href={`tel:${SHOP_PHONE}`}>
+                                Call Us
+                            </a>
+                            <a className="btn-confirm" style={{textAlign: 'center', textDecoration: 'none'}} target="_blank" rel="noopener noreferrer"
+                               href={`https://wa.me/${SHOP_WA}?text=${encodeURIComponent(lastBooking ? `Hi, it's ${lastBooking.name}. I booked a haircut at ${lastBooking.time}. Can you confirm please?` : "Hi, I'd like to confirm my booking.")}`}>
+                                WhatsApp
+                            </a>
+                        </div>
+                        <button className="btn-cancel" style={{width: '100%'}} onClick={() => { setShowSuccess(false); setFormData({ name: "", phone: "", time: "" }); }}>
                             Done
                         </button>
                     </div>
