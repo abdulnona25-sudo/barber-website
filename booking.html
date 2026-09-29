@@ -250,6 +250,29 @@
             font-size: 12px;
         }
 
+        .booking-message {
+            color: var(--text-muted);
+            line-height: 1.8;
+            font-size: 15px;
+            margin-bottom: 24px;
+        }
+
+        .booking-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .booking-actions .btn-confirm {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
         /* ─── POPUP ─── */
         .popup-overlay {
             position: fixed;
@@ -373,63 +396,31 @@
 <div id="booking-root"></div>
 
 <script type="text/babel">
-const { useState } = React;
-
 function BookingForm() {
-    const [formData, setFormData] = useState({ name: "", phone: "", time: "" });
-    const [showPopup, setShowPopup] = useState(false);
-    const [showSuccess, setShowSuccess] = useState(false);
-    const [phoneError, setPhoneError] = useState("");
-    const [errorMessage, setErrorMessage] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [lastBooking, setLastBooking] = useState(null);
     const SHOP_PHONE = "+447737055883";
     const SHOP_WA = "447737055883";
-
-    function handleChange(e) {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-        if (e.target.name === "phone") setPhoneError("");
-        setErrorMessage("");
-    }
-
-    function validateUKPhone(phone) {
-        return /^(?:0|\+44)\d{9,10}$/.test(phone.replace(/\s+/g, ""));
-    }
-
-    function handleSubmit(e) {
-        e.preventDefault();
-        if (!validateUKPhone(formData.phone)) { setPhoneError("Please enter a valid UK phone number"); return; }
-        if (formData.time < "09:00" || formData.time > "18:30") { setErrorMessage("Please choose a time during opening hours (9am–6:30pm)"); return; }
-        setShowPopup(true);
-    }
-
-    async function confirmBooking() {
-        setLoading(true);
-        try {
-            const response = await fetch("https://barber-website-d8re.onrender.com/book", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formData)
-            });
-            const data = await response.json();
-            if (!response.ok) { setErrorMessage(data.message || "Booking failed"); setShowPopup(false); setLoading(false); return; }
-            setLastBooking(formData);
-            setShowPopup(false);
-            setShowSuccess(true);
-            setErrorMessage("");
-            setFormData({ name: "", phone: "", time: "" });
-        } catch (err) {
-            setErrorMessage("Server error. Please try again.");
-        }
-        setLoading(false);
-    }
-
-    const times = ["09:00","09:30","10:00","10:30","11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30","18:00"];
+    const bookingMessage = encodeURIComponent("Hi, I would like to book a barber appointment. Please let me know the available times and confirm if a slot is available.");
 
     return (
         <div className="booking-layout">
+            <div className="info-panel">
+                <h3>How to Book</h3>
+                <p className="booking-message">
+                    To reserve your appointment, please call us or send us a WhatsApp message.
+                    We’ll confirm the best time for your visit.
+                </p>
 
-            {/* LEFT - Hours */}
+                <div className="booking-actions">
+                    <a className="btn-confirm" href={`tel:${SHOP_PHONE}`}>
+                        Call to Book
+                    </a>
+                    <a className="btn-confirm" target="_blank" rel="noopener noreferrer"
+                       href={`https://wa.me/${SHOP_WA}?text=${bookingMessage}`}>
+                        WhatsApp to Book
+                    </a>
+                </div>
+            </div>
+
             <div className="info-panel">
                 <h3>Opening Hours</h3>
                 <ul className="hours-list">
@@ -450,38 +441,6 @@ function BookingForm() {
                 </ul>
             </div>
 
-            {/* CENTER - Form */}
-            <div className="form-panel">
-                <h2>Reserve Your Appointment</h2>
-                <p className="form-subtitle">Book online, then call or WhatsApp us to confirm</p>
-
-                {errorMessage && <div className="error-msg">{errorMessage}</div>}
-
-                <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label className="form-label">Full Name</label>
-                        <input className="form-input" type="text" name="name" placeholder="Your name" value={formData.name} required onChange={handleChange} />
-                    </div>
-
-                    <div className="form-group">
-                        <label className="form-label">Phone Number</label>
-                        <input className="form-input" type="tel" name="phone" placeholder="UK phone number" value={formData.phone} required onChange={handleChange} />
-                        {phoneError && <span className="field-error">{phoneError}</span>}
-                    </div>
-
-                    <div className="form-group">
-                        <label className="form-label">Preferred Time</label>
-                        <select className="form-input" name="time" value={formData.time} required onChange={handleChange}>
-                            <option value="">Select a time slot</option>
-                            {times.map(t => <option key={t} value={t}>{t}</option>)}
-                        </select>
-                    </div>
-
-                    <button type="submit" className="btn-submit">Request Booking</button>
-                </form>
-            </div>
-
-            {/* RIGHT - Payment */}
             <div className="info-panel">
                 <h3>Payment Methods</h3>
                 <div className="payment-icons">
@@ -495,57 +454,6 @@ function BookingForm() {
                     </div>
                 </div>
             </div>
-
-            {/* CONFIRM POPUP */}
-            {showPopup && (
-                <div className="popup-overlay">
-                    <div className="popup-box">
-                        <h3>Confirm Booking</h3>
-                        <div className="popup-details">
-                            <div className="popup-detail-row">
-                                <span>Name</span><span>{formData.name}</span>
-                            </div>
-                            <div className="popup-detail-row">
-                                <span>Phone</span><span>{formData.phone}</span>
-                            </div>
-                            <div className="popup-detail-row">
-                                <span>Time</span><span>{formData.time}</span>
-                            </div>
-                        </div>
-                        <div className="popup-btns">
-                            <button className="btn-confirm" onClick={confirmBooking} disabled={loading}>
-                                {loading ? "Sending..." : "Confirm"}
-                            </button>
-                            <button className="btn-cancel" onClick={() => setShowPopup(false)}>Cancel</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* SUCCESS POPUP */}
-            {showSuccess && (
-                <div className="popup-overlay">
-                    <div className="popup-box">
-                        <div className="success-icon">✅</div>
-                        <h3>Booking Sent</h3>
-                        <p style={{color: 'var(--text-muted)', fontSize: '15px', margin: '12px 0 20px'}}>
-                            To confirm your slot, please call or WhatsApp us.
-                        </p>
-                        <div className="popup-btns" style={{marginBottom: '12px'}}>
-                            <a className="btn-confirm" style={{textAlign: 'center', textDecoration: 'none'}} href={`tel:${SHOP_PHONE}`}>
-                                Call Us
-                            </a>
-                            <a className="btn-confirm" style={{textAlign: 'center', textDecoration: 'none'}} target="_blank" rel="noopener noreferrer"
-                               href={`https://wa.me/${SHOP_WA}?text=${encodeURIComponent(lastBooking ? `Hi, it's ${lastBooking.name}. I booked a haircut at ${lastBooking.time}. Can you confirm please?` : "Hi, I'd like to confirm my booking.")}`}>
-                                WhatsApp
-                            </a>
-                        </div>
-                        <button className="btn-cancel" style={{width: '100%'}} onClick={() => { setShowSuccess(false); setFormData({ name: "", phone: "", time: "" }); }}>
-                            Done
-                        </button>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }
